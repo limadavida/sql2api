@@ -1,0 +1,10 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: Sql2Api allowing you to create fast (yeah, really fast) RESTful APIs
+    directly from SQL queries! Here, you just need sql for move the world!
+  title: Sql2Api
+  version: "1.0"
+paths: {}
+swagger: "2.0"

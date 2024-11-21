@@ -1,0 +1,69 @@
+{
+  "project": {
+    "title": "TodoApi",
+    "description": "Skip the hassle and save time with Sql2Api!",
+    "version": "0.1.0",
+    "author": "me",
+    "databases": {
+      "type": "sqlite3",
+      "name": "todo_dev.db"
+    },
+    "servers": {
+      "port": 8000
+    },
+    "services": {
+      "todo": [
+        {
+          "sqlFile": "create_todo.sql",
+          "httpMethod": "POST",
+          "description": "Create task"
+        },
+        {
+          "sqlFile": "read_one.sql",
+          "httpMethod": "GET",
+          "description": "Get one task",
+          "params": {
+            "id": {
+              "type": "int"
+            }
+          }
+        },
+        {
+          "sqlFile": "read_all.sql",
+          "httpMethod": "GET",
+          "description": "Get all tasks",
+          "query": {
+            "limit": {
+              "type": "int",
+              "default": 10
+            }
+          }
+        },
+        {
+          "sqlFile": "update_todo.sql",
+          "httpMethod": "PUT",
+          "description": "Update task",
+          "params": {
+            "id": {
+              "type": "integer",
+              "required": true,
+              "description": "The unique identifier for the todo item."
+            }
+          }
+        },
+        {
+          "sqlFile": "delete_todo.sql",
+          "httpMethod": "DELETE",
+          "description": "Delete task",
+          "params": {
+            "id": {
+              "type": "integer",
+              "required": true,
+              "description": "The unique identifier for the todo item."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

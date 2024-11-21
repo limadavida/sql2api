@@ -1,0 +1,12 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Sql2Api allowing you to create fast (yeah, really fast) RESTful APIs directly from SQL queries! Here, you just need sql for move the world!",
+        "title": "Sql2Api",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {}
+}
