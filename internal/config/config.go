@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/limadavida/sql2api/internal/database"
+	"github.com/limadavida/sql2api/internal/logger"
+	"github.com/limadavida/sql2api/internal/models"
 	"github.com/limadavida/sql2api/internal/utils"
 	"github.com/spf13/viper"
 )
@@ -96,21 +99,48 @@ func validateSqlTables(directory string) utils.SqlNamed {
 	return validateSqlFiles(directory)
 }
 
-func CreateTables() {
-	tables := validateSqlTables("examples/TodoExample/tables")
-	sqliteDB := &database.SQLiteDatabase{DatabaseFile: ConfigData.Databases.Name}
+func CreateTables(cfg models.ProjectConfig) {
+	logger := logger.GetLogger()
+	tables := validateSqlTables(cfg.RootDir + "/tables")
 
-	err := sqliteDB.Connect()
+	db, err := database.NewDatabase(cfg.Database.Type, cfg.Database.Name)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
-	defer sqliteDB.Conn.Close()
 
 	for tableName, tableSql := range tables {
-		err = sqliteDB.Execute(tableSql)
+		err = db.Execute(tableSql)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
-		log.Println("Tabela", tableName, "criada com sucesso!")
+		logger.Info("Tabela", tableName, "criada com sucesso!")
 	}
 }
+
+func CreateProjectPath(projectName string) error {
+	logger := logger.GetLogger()
+
+	projectBasePath := filepath.Join(".", projectName)
+	modelsPath := filepath.Join(projectBasePath, "models")
+	tablesPath := filepath.Join(projectBasePath, "tables")
+
+	err := os.MkdirAll(modelsPath, os.ModePerm)
+	if err != nil {
+		logger.Fatal("erro ao criar a pasta %s: %v", projectName, err)
+	}
+
+	err = os.MkdirAll(modelsPath, os.ModePerm)
+	if err != nil {
+		logger.Fatal("erro ao criar a pasta 'models': %v", err)
+	}
+
+	err = os.MkdirAll(tablesPath, os.ModePerm)
+	if err != nil {
+		logger.Fatal("erro ao criar a pasta 'tables': %v", err)
+	}
+
+	logger.Info("Project Created at", projectBasePath)
+	return nil
+}
+
+

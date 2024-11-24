@@ -16,7 +16,6 @@ models:
       - "create_one.sql"
   GET:
     file:
-      - "read_one.sql"
       - "read_all.sql"
   PUT:
     file:

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -10,114 +11,57 @@ import (
 )
 
 type Handler interface {
-	Post() gin.HandlerFunc
-	Get() gin.HandlerFunc
-	Put() gin.HandlerFunc
-	Del() gin.HandlerFunc
+	Router()
 }
 
 type Routes struct {
-	cfg       config.Config
-	models    utils.SqlNamed
-	dbService *database.SQLiteDatabase
+	cfg         config.Config
+	models      utils.SqlNamed
+	dbConnector database.Database
+	ginProvider *gin.Engine
 }
 
 func NewHandler(cfg config.Config) Handler {
 	models := config.ValidateSqlModels(cfg.RootDir + "/models")
-	sqliteDB := &database.SQLiteDatabase{DatabaseFile: config.ConfigData.Databases.Name}
 
-	return &Routes{cfg: cfg, models: models, dbService: sqliteDB}
-}
-
-func (r *Routes) Post() gin.HandlerFunc {
-	err := r.dbService.Connect()
+	db, err := database.NewDatabase(cfg.Databases.Type, cfg.Databases.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer r.dbService.Conn.Close()
 
-	sqlNames := utils.RemoveExtFromList(r.cfg.Models.POST.File, ".sql")
-	for _, sqlName := range sqlNames {
-		sqlQuery := r.models[sqlName]
-		log.Println(sqlQuery)
-		err := r.dbService.Execute(sqlQuery)
-		if err != nil {
-			return func(c *gin.Context) {
-				c.JSON(500, gin.H{"error": "Internal Server Error"})
-			}
-		}
-	}
-
-	return func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "POST request for createTask", "models": r.cfg.Models.POST.File})
+	return &Routes{
+		cfg:         cfg,
+		models:      models,
+		dbConnector: db,
+		ginProvider: gin.Default(),
 	}
 }
 
-func (r *Routes) Get() gin.HandlerFunc {
-	err := r.dbService.Connect()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer r.dbService.Conn.Close()
+func (r *Routes) Router() {
 
-	sqlNames := utils.RemoveExtFromList(r.cfg.Models.POST.File, ".sql")
-	for _, sqlName := range sqlNames {
-		sqlQuery := r.models[sqlName]
-		log.Println(sqlQuery)
-		err := r.dbService.Execute(sqlQuery)
-		if err != nil {
-			return func(c *gin.Context) {
-				c.JSON(500, gin.H{"error": "Internal Server Error"})
-			}
-		}
-	}
-	return func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "GET request for readTask", "files": r.cfg.Models.GET.File})
-	}
+	basicRoute := "/" + r.cfg.Project
+
+	r.ginProvider.POST(basicRoute, r.executeQuery(r.cfg.RootDir+"/models/"+r.cfg.Models.POST.File[0]))
+	r.ginProvider.GET(basicRoute, r.executeQuery(r.cfg.RootDir+"/models/"+r.cfg.Models.POST.File[0]))
+	r.ginProvider.PUT(basicRoute, r.executeQuery(r.cfg.RootDir+"/models/"+r.cfg.Models.PUT.File[0]))
+	r.ginProvider.DELETE(basicRoute, r.executeQuery(r.cfg.RootDir+"/models/"+r.cfg.Models.DELETE.File[0]))
+
+	port := r.cfg.Servers[0]
+	r.ginProvider.Run(fmt.Sprintf(":%d", port))
 }
 
-func (r *Routes) Put() gin.HandlerFunc {
-	err := r.dbService.Connect()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer r.dbService.Conn.Close()
+func (r *Routes) executeQuery(modelFile string) gin.HandlerFunc {
+	fn := func(c *gin.Context) {
+		sqlQuery := utils.ReadFile(modelFile)
 
-	sqlNames := utils.RemoveExtFromList(r.cfg.Models.POST.File, ".sql")
-	for _, sqlName := range sqlNames {
-		sqlQuery := r.models[sqlName]
-		log.Println(sqlQuery)
-		err := r.dbService.Execute(sqlQuery)
+		log.Println("sqlQuery\n", sqlQuery)
+
+		err := r.dbConnector.Execute(sqlQuery)
 		if err != nil {
-			return func(c *gin.Context) {
-				c.JSON(500, gin.H{"error": "Internal Server Error"})
-			}
+			c.String(500, modelFile)
 		}
+		c.String(200, modelFile)
 	}
-	return func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "PUT request for updateTask", "files": r.cfg.Models.PUT})
-	}
-}
+	return gin.HandlerFunc(fn)
 
-func (r *Routes) Del() gin.HandlerFunc {
-	err := r.dbService.Connect()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer r.dbService.Conn.Close()
-
-	sqlNames := utils.RemoveExtFromList(r.cfg.Models.POST.File, ".sql")
-	for _, sqlName := range sqlNames {
-		sqlQuery := r.models[sqlName]
-		log.Println(sqlQuery)
-		err := r.dbService.Execute(sqlQuery)
-		if err != nil {
-			return func(c *gin.Context) {
-				c.JSON(500, gin.H{"error": "Internal Server Error"})
-			}
-		}
-	}
-	return func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "DELETE request for deleteTask", "files": r.cfg.Models.DELETE})
-	}
 }

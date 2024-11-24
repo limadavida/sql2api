@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -69,4 +70,31 @@ func RemoveExtFromList(filenames []string, ext string) []string {
 		result = append(result, RemoveExt(filename, ext))
 	}
 	return result
+}
+
+func ReadFile(file string) string {
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatalf("Erro ao ler o arquivo: %v\n", err)
+	}
+	return string(bytes)
+}
+
+func IsStructEmpty(s interface{}) bool {
+	v := reflect.ValueOf(s)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return false
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		if field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface() {
+			return false
+		}
+	}
+	return true
 }
