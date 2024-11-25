@@ -1,14 +1,15 @@
 package models
 
 type ProjectConfig struct {
-	Project  string
-	RootDir  string
-	Version  string
-	Author   string
-	Type     string
-	Servers  string
-	Database DatabaseConfig
-	Models   map[string]ModelFiles
+	Project     string
+	RootDir     string
+	Version     string
+	Author      string
+	Type        string
+	Servers     string
+	Database    DatabaseConfig
+	Models      map[string]string
+	ModelsSetup map[string]ModelConfig
 }
 
 type DatabaseConfig struct {
@@ -18,4 +19,12 @@ type DatabaseConfig struct {
 
 type ModelFiles struct {
 	File []string
+}
+
+type ModelConfig struct {
+	Description string
+	HTTPMethod  string
+	Async       bool
+	Parameters  string
+	Query       string
 }

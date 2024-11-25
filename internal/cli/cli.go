@@ -66,7 +66,7 @@ func initialModel() model {
 		m.inputs[i] = t
 	}
 	m.config = models.ProjectConfig{
-		Models: make(map[string]models.ModelFiles),
+		Models: make(map[string]string),
 	}
 	return m
 }
@@ -164,7 +164,7 @@ func (m *model) saveConfig() {
 		return value
 	}
 	m.config.Project = setValue(m.inputs[0].Value(), "TodoApiExample")
-	m.config.RootDir = setValue(m.inputs[1].Value(), "./examples/TodoApiExample")
+	m.config.RootDir = setValue(m.inputs[1].Value(), "./examples")
 	m.config.Author = setValue(m.inputs[2].Value(), "Santos Dummont")
 	m.config.Servers = setValue(m.inputs[3].Value(), "localhost")
 	m.config.Database.Name = setValue(m.inputs[4].Value(), "todo_example.db")
